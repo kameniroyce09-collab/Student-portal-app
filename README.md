@@ -4,7 +4,7 @@ A modern, full-stack student management system built with Node.js, Express, MySQ
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![Node](https://img.shields.io/badge/node-%3E%3D14.0.0-brightgreen.svg)
-![License](https://img.shields.io/badge/license-MIT-green.svg)
+
 
 ## ✨ Features
 
