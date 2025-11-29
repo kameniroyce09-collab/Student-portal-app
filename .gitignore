@@ -233,7 +233,7 @@ public/uploads/
 
 # Logs and databases
 *.log
-*.sql
+# *.sql
 *.sqlite
 
 # Test coverage
