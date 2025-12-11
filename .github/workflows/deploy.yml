@@ -1,0 +1,93 @@
+name: CI/CD - Student Portal
+
+on:
+  push:
+    branches:
+      - main
+      - feature-*
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-test-push-deploy:
+    runs-on: self-hosted   # EC2 GitHub runner
+
+    env:
+      DOCKERHUB_USERNAME: arsenet10
+      BACKEND_IMAGE: arsenet10/student-portal-backend
+      FRONTEND_IMAGE: arsenet10/student-portal-frontend
+
+    steps:
+      # 1. Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. Backend unit tests
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Install backend dependencies
+        working-directory: ./backend
+        run: npm ci
+
+      - name: Run backend tests
+        working-directory: ./backend
+        run: npm test
+
+      # 3. CLEAN THE DOCKER ENVIRONMENT BEFORE BUILDING
+      - name: Stop running containers
+        run: |
+          docker stop $(docker ps -aq) || true
+
+      - name: Remove all containers
+        run: |
+          docker rm $(docker ps -aq) || true
+
+      - name: Remove all Docker images
+        run: |
+          docker rmi -f $(docker images -aq) || true
+
+      # 4. Login to Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 5. Build & push backend image
+      - name: Build backend image
+        run: |
+          docker build \
+            -t $BACKEND_IMAGE:latest \
+            -t $BACKEND_IMAGE:${{ github.sha }} \
+            ./backend
+
+      - name: Push backend image
+        run: |
+          docker push $BACKEND_IMAGE:latest
+          docker push $BACKEND_IMAGE:${{ github.sha }}
+
+      # 6. Build & push frontend image
+      - name: Build frontend image
+        run: |
+          docker build \
+            -t $FRONTEND_IMAGE:latest \
+            -t $FRONTEND_IMAGE:${{ github.sha }} \
+            ./frontend
+
+      - name: Push frontend image
+        run: |
+          docker push $FRONTEND_IMAGE:latest
+          docker push $FRONTEND_IMAGE:${{ github.sha }}
+
+      # 7. Deploy (only for main branch)
+      - name: Deploy with Docker Compose
+        if: github.ref == 'refs/heads/main'
+        working-directory: /home/ubuntu/Student-portal-app
+        run: |
+          docker pull $BACKEND_IMAGE:latest
+          docker pull $FRONTEND_IMAGE:latest
+          docker compose up -d
