@@ -4,14 +4,14 @@ on:
   push:
     branches:
       - main
-      - feature-*
+      - 'feature-branch/*'     # matches feature-branch/s6arsene
   pull_request:
     branches:
       - main
 
 jobs:
   build-test-push-deploy:
-    runs-on: self-hosted   # EC2 GitHub runner
+    runs-on: self-hosted        # your EC2 GitHub runner
 
     env:
       DOCKERHUB_USERNAME: arsenet10
@@ -19,7 +19,7 @@ jobs:
       FRONTEND_IMAGE: arsenet10/student-portal-frontend
 
     steps:
-      # 1. Checkout code
+      # 1. Checkout repository code
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -37,8 +37,8 @@ jobs:
         working-directory: ./backend
         run: npm test
 
-      # 3. CLEAN THE DOCKER ENVIRONMENT BEFORE BUILDING
-      - name: Stop running containers
+      # 3. CLEAN DOCKER ENVIRONMENT BEFORE BUILDING
+      - name: Stop all running containers
         run: |
           docker stop $(docker ps -aq) || true
 
@@ -51,13 +51,13 @@ jobs:
           docker rmi -f $(docker images -aq) || true
 
       # 4. Login to Docker Hub
-      - name: Log in to Docker Hub
+      - name: Docker Hub Login
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # 5. Build & push backend image
+      # 5. Build & push BACKEND image
       - name: Build backend image
         run: |
           docker build \
@@ -70,7 +70,7 @@ jobs:
           docker push $BACKEND_IMAGE:latest
           docker push $BACKEND_IMAGE:${{ github.sha }}
 
-      # 6. Build & push frontend image
+      # 6. Build & push FRONTEND image
       - name: Build frontend image
         run: |
           docker build \
@@ -83,7 +83,7 @@ jobs:
           docker push $FRONTEND_IMAGE:latest
           docker push $FRONTEND_IMAGE:${{ github.sha }}
 
-      # 7. Deploy (only for main branch)
+      # 7. Deploy only when pushing to MAIN branch
       - name: Deploy with Docker Compose
         if: github.ref == 'refs/heads/main'
         working-directory: /home/ubuntu/Student-portal-app
