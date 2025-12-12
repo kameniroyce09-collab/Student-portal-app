@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-      - 'feature-branch/*'     # matches feature-branch/s6arsene
+      - 'feature-branch/*'
   pull_request:
     branches:
       - main
@@ -31,7 +31,14 @@ jobs:
 
       - name: Install backend dependencies
         working-directory: ./backend
-        run: npm ci
+        run: |
+          if [ -f package-lock.json ]; then
+            echo "package-lock.json found, running npm ci..."
+            npm ci
+          else
+            echo "No package-lock.json found, running npm install..."
+            npm install
+          fi
 
       - name: Run backend tests
         working-directory: ./backend
