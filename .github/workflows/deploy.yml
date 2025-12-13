@@ -92,9 +92,9 @@ jobs:
 
       # 7. Deploy only when pushing to MAIN branch
       - name: Deploy with Docker Compose
-        if: github.ref == 'refs/heads/main'
+        #if: github.ref == 'refs/heads/main'
         working-directory: /home/ubuntu/Student-portal-app
         run: |
           docker pull $BACKEND_IMAGE:latest
           docker pull $FRONTEND_IMAGE:latest
-          docker compose up -d
+          docker-compose up -d
