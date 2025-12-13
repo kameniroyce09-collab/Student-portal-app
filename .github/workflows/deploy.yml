@@ -95,6 +95,6 @@ jobs:
         #if: github.ref == 'refs/heads/main'
         working-directory: /home/ubuntu/Student-portal-app
         run: |
-          docker pull $BACKEND_IMAGE:latest
-          docker pull $FRONTEND_IMAGE:latest
+          #docker pull $BACKEND_IMAGE:latest
+          #docker pull $FRONTEND_IMAGE:latest
           docker-compose up -d
