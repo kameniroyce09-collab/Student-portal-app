@@ -14,7 +14,7 @@ const app = express();
 
 // CORS configuration - MUST be before other middleware
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://3.135.195.15:3000', 'http://3.135.195.15:5000'],
+  origin: ['http://localhost:3000', 'http://127.0.0.1:3000', 'http://13.58.100.200:3000', 'http://13.58.100.200:5000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
