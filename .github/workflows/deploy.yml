@@ -11,6 +11,9 @@ on:
 
 jobs:
   build-test-push-deploy:
+    # Avoid infinite loop when we push the [skip ci] commit
+    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
+
     runs-on: self-hosted        # your EC2 GitHub runner
 
     env:
@@ -90,11 +93,52 @@ jobs:
           docker push $FRONTEND_IMAGE:latest
           docker push $FRONTEND_IMAGE:${{ github.sha }}
 
-      # 7. Deploy only when pushing to MAIN branch
+      # 7. Install yq (CLI YAML editor) locally in the workspace
+      #    We use it ONLY to update Helm values.yaml in the repo.
+      - name: Install yq
+        run: |
+          YQ_VERSION=v4.44.3
+          wget https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64 -O yq
+          chmod +x yq
+        shell: bash
+
+      # 8. Update Helm image tags in values.yaml with current commit SHA
+      #    File path assumed: helm-charts/student-portal/values.yaml
+      - name: Update Helm image tags in values.yaml
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          ./yq -i '
+            .backend.image.tag = env("IMAGE_TAG") |
+            .frontend.image.tag = env("IMAGE_TAG")
+          ' helm-charts/student-portal/values.yaml
+        shell: bash
+
+      # 9. Commit & push Helm values.yaml back to the same branch (main or feature-branch/*)
+      - name: Commit and push updated Helm values.yaml
+        if: startsWith(github.ref, 'refs/heads/')
+        run: |
+          IMAGE_TAG=${{ github.sha }}
+          BRANCH_NAME=${GITHUB_REF#refs/heads/}
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add helm-charts/student-portal/values.yaml
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit in values.yaml"
+            exit 0
+          fi
+
+          git commit -m "chore: update Helm image tags to ${IMAGE_TAG} [skip ci]"
+          git push origin "$BRANCH_NAME"
+        shell: bash
+
+      # 10. Deploy with Docker Compose (still using your existing VM deployment)
       - name: Deploy with Docker Compose
-        #if: github.ref == 'refs/heads/main'
+        # If you want this only for main, uncomment:
+        # if: github.ref == 'refs/heads/main'
         working-directory: /home/ubuntu/Student-portal-app
         run: |
-          #docker pull $BACKEND_IMAGE:latest
-          #docker pull $FRONTEND_IMAGE:latest
           docker-compose up -d
