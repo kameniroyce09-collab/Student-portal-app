@@ -1,18 +1,14 @@
 # values.yaml
 
 namespace: student-portal
-
 global:
   host: student-portal.giize.com
-
 backend:
   replicaCount: 1
-
   image:
     repository: arsenet10/student-portal-backend
-    tag: "latest"
+    tag: "e0c19bcffbbcc9c5226ac965f56a8e267bf6e2f8"
     pullPolicy: IfNotPresent
-
   env:
     nodeEnv: production
     port: 5000
@@ -20,29 +16,23 @@ backend:
     dbPort: 3306
     dbUser: admin
     dbName: student_app
-    jwtExpire: "15d"          # <--- this is what becomes JWT_EXPIRE
-
+    jwtExpire: "15d" # <--- this is what becomes JWT_EXPIRE
   secret:
     dbPassword: "admin12345"
     jwtSecret: "houston2016"
-
 frontend:
   replicaCount: 1
-
   image:
     repository: arsenet10/student-portal-frontend
-    tag: "latest"
+    tag: "e0c19bcffbbcc9c5226ac965f56a8e267bf6e2f8"
     pullPolicy: IfNotPresent
-
 ingress:
   enabled: true
   className: nginx
-
   tls:
     enabled: true
     secretName: student-portal-tls
-    clusterIssuer: letsencrypt-prod   # existing, working ClusterIssuer
-
+    clusterIssuer: letsencrypt-prod # existing, working ClusterIssuer
   hosts:
     - host: student-portal.giize.com
       paths:
@@ -56,8 +46,7 @@ ingress:
           service:
             name: student-portal-backend
             port: 5000
-
 service:
   type: ClusterIP
-httpRoute: 
+httpRoute:
   enabled: false
