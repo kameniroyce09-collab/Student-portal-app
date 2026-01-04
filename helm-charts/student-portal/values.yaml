@@ -7,7 +7,7 @@ backend:
   replicaCount: 1
   image:
     repository: arsenet10/student-portal-backend
-    tag: "7c4570f58a479ecde1a4b6c71c8c561d7e22ac0b"
+    tag: "3cb2cd5dab457c5cb2cd656d2ca371a0d6a230e1"
     pullPolicy: IfNotPresent
   env:
     nodeEnv: production
@@ -24,7 +24,7 @@ frontend:
   replicaCount: 1
   image:
     repository: arsenet10/student-portal-frontend
-    tag: "7c4570f58a479ecde1a4b6c71c8c561d7e22ac0b"
+    tag: "3cb2cd5dab457c5cb2cd656d2ca371a0d6a230e1"
     pullPolicy: IfNotPresent
 ingress:
   enabled: true
